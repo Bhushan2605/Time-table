@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timetable Management System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Timetable Management System</h1>
+            <p>Seamlessly plan, track, and manage your schedules with ease.</p>
+        </div>
+        <nav>
+            <ul>
+                <li id="home-link"><a href="index.html">Home</a></li>
+                <li id="manage-link" style="display: none;"><a href="manage.html">Manage Timetable</a></li>
+                <li id="view-link" style="display: none;"><a href="timetable.html">View Timetable</a></li>
+                <li id="login-link"><a href="login.html">Login</a></li>
+                <li id="register-link"><a href="register.html">Register</a></li>
+                <li id="logout-link" style="display: none;"><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </nav>
+        
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Effortless Scheduling, Maximum Productivity</h2>
+            <p>Plan, edit, and track your schedule efficiently with our user-friendly system.</p>
+            <a href="register.html" class="cta-button">Get Started</a>
+            <p id="greeting" style="margin-top: 20px; font-weight: bold;"></p>
+        </div>
+    </section>
+
+    <section class="about">
+        <h2>Why Choose Our System?</h2>
+        <p>Designed for students, teachers, and professionals, our platform offers a seamless experience to keep your
+            schedule organized and accessible anytime.</p>
+    </section>
+
+    <section class="features">
+        <h2>Key Features</h2>
+        <div class="feature-grid">
+            <div class="feature-item"><span>📅</span> Easy Timetable Creation</div>
+            <div class="feature-item"><span>⏳</span> Customizable Time Slots</div>
+            <div class="feature-item"><span>💾</span> Auto-Save Functionality</div>
+            <div class="feature-item"><span>📊</span> Intuitive User Interface</div>
+            <div class="feature-item"><span>🔒</span> Secure Login & Data Protection</div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 Timetable Management System. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        // Get elements
+        const username = localStorage.getItem("loggedInUser");
+        const greeting = document.getElementById("greeting");
+        const loginLink = document.getElementById("login-link");
+        const registerLink = document.getElementById("register-link");
+        const logoutLink = document.getElementById("logout-link");
+        const manageLink = document.getElementById("manage-link");
+        const viewLink = document.getElementById("view-link");
+        const ctaButton = document.querySelector(".cta-button"); // Get Started button
+    
+        if (username) {
+            greeting.innerText = `Welcome back, ${username}!`;
+    
+            // Hide login/register and show logout + extra nav
+            loginLink.style.display = "none";
+            registerLink.style.display = "none";
+            logoutLink.style.display = "inline-block";
+            manageLink.style.display = "inline-block";
+            viewLink.style.display = "inline-block";
+    
+            // Hide Get Started button if logged in
+            if (ctaButton) {
+                ctaButton.style.display = "none";
+            }
+        } else {
+            greeting.innerText = "You're not logged in.";
+    
+            // Show login/register and hide others
+            loginLink.style.display = "inline-block";
+            registerLink.style.display = "inline-block";
+            logoutLink.style.display = "none";
+            manageLink.style.display = "none";
+            viewLink.style.display = "none";
+        }
+    
+        function logout() {
+            localStorage.removeItem("loggedInUser");
+            alert("You have been logged out.");
+            location.reload();
+        }
+    </script>
+    
+</body>
+
+</html>

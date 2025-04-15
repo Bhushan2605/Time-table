@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Timetable</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header>
+        <h1>View Timetable</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="manage.html">Manage Timetable</a></li>
+                <li><a href="timetable.html">View Timetable</a></li>
+                
+            </ul>
+        </nav>
+    </header>
+
+    <section class="timetable-section">
+        <h2>Your Timetable</h2>
+        
+        <!-- Display Class Info -->
+        <div id="class-info">
+            <p><strong>Class:</strong> <span id="class"></span></p>
+            <p><strong>Branch:</strong> <span id="branch"></span></p>
+            <p><strong>Section:</strong> <span id="section"></span></p>
+        </div>
+
+        <table id="timetable">
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>10:00 - 11:00</th>
+                    <th>11:00 - 12:00</th>
+                    <th>1:00 - 2:00</th>
+                    <th>2:00 - 3:00</th>
+                   
+                </tr>
+            </thead>
+            <tbody id="timetable-body">
+                <!-- Timetable entries will be inserted here -->
+            </tbody>
+        </table>
+        <div class="refresh-container">
+            <button id="refreshBtn">Refresh Timetable</button>
+        </div>
+        <div class="download-container">
+            <button id="downloadPdfBtn">Download Timetable as PDF</button>
+        </div>
+        
+    </section>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            loadClassInfo();
+            loadTimetable();
+    
+            // Attach event listener for the PDF download button
+            const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+            if (downloadPdfBtn) {
+                downloadPdfBtn.addEventListener('click', downloadPdf);
+            }
+        });
+    
+        function loadClassInfo() {
+            // Same code as before to load class info
+            const classInfo = JSON.parse(localStorage.getItem("classInfo"));
+            if (classInfo) {
+                document.getElementById("class").textContent = classInfo.class;
+                document.getElementById("branch").textContent = classInfo.branch;
+                document.getElementById("section").textContent = classInfo.section;
+            }
+        }
+    
+        function loadTimetable() {
+            const timetable = JSON.parse(localStorage.getItem("timetable")) || [];
+            const timetableBody = document.getElementById("timetable-body");
+            timetableBody.innerHTML = "";  // Clear any existing data
+    
+            const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+            const timeSlots = ["10-11", "11-12", "1-2", "2-3", ];
+    
+            // Loop through each day and populate the table
+            days.forEach(day => {
+                let row = document.createElement("tr");
+    
+                let dayCell = document.createElement("td");
+                dayCell.textContent = day;
+                row.appendChild(dayCell);
+    
+                timeSlots.forEach(time => {
+                    let cell = document.createElement("td");
+    
+                    const entry = timetable.find(t => t.day === day && t.time === time);
+                    if (entry) {
+                        cell.innerHTML = `<strong>${entry.subject}</strong><br><small>${entry.teacher}</small>`;
+                    } else {
+                        cell.textContent = "-";
+                    }
+    
+                    row.appendChild(cell);
+                });
+    
+                timetableBody.appendChild(row);
+            });
+        }
+       function downloadPdf() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Add Title
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text("Timetable", 14, 20);
+
+    // Add Class Info
+    const classInfo = JSON.parse(localStorage.getItem("classInfo"));
+    if (classInfo) {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(12);
+        doc.text(`Class: ${classInfo.class}`, 14, 30);
+        doc.text(`Branch: ${classInfo.branch}`, 14, 40);
+        doc.text(`Section: ${classInfo.section}`, 14, 50);
+    }
+
+    // Add Timetable Table
+    const timetable = JSON.parse(localStorage.getItem("timetable")) || [];
+    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+    const timeSlots = ["10-11", "11-12", "1-2", "2-3", "3-4"];
+
+    let y = 60;  // Starting position for the timetable
+    const columnWidth = 40;  // Fixed width for each column
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+
+    // Table header (with adequate spacing)
+    doc.text("Day", 14, y);
+    doc.text("10:00-11:00", 50, y);
+    doc.text("11:00-12:00", 90, y);
+    doc.text("1:00-2:00", 130, y);
+    doc.text("2:00-3:00", 170, y);
+   
+    y += 10;  // Move to the next line after header
+
+    // Add the timetable entries
+    days.forEach(day => {
+        doc.text(day, 14, y);
+        timeSlots.forEach((time, index) => {
+            const entry = timetable.find(t => t.day === day && t.time === time);
+            const text = entry ? `${entry.subject} - ${entry.teacher}` : "-";
+
+            // Adjust x-position dynamically based on the slot index
+            doc.text(text, 50 + (index * columnWidth), y);
+        });
+        y += 10;  // Increase y after each day row
+    });
+
+    // Save the generated PDF
+    doc.save("timetable.pdf");
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    loadTimetable();
+
+    // Attach refresh button logic
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', refreshTimetable);
+    }
+});
+
+function refreshTimetable() {
+    const confirmRefresh = confirm("Are you sure you want to refresh the timetable? This will clear all data.");
+    if (confirmRefresh) {
+        localStorage.removeItem('timetable');
+        alert("Timetable has been refreshed!");
+        loadTimetable();
+    }
+}
+
+        
+        
+    </script>
+    
+</body>
+
+</html>
+
+
+<style>
+    body {
+        font-family: 'Poppins', sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #f4f7fc;
+        color: #333;
+    }
+
+    header {
+        background: linear-gradient(90deg, #0052d4, #4364f7, #6fb1fc);
+        color: white;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    nav ul {
+        list-style: none;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        background: #003c8f;
+        margin: 0;
+    }
+
+    nav ul li {
+        padding: 15px;
+    }
+
+    nav ul li a {
+        text-decoration: none;
+        color: white;
+        font-size: 18px;
+        transition: 0.3s;
+    }
+
+    nav ul li a:hover {
+        color: #ffeb3b;
+    }
+
+    .timetable-section {
+        max-width: 80%;
+        margin: 40px auto;
+        padding: 20px;
+        background: white;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        text-align: center;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    th,
+    td {
+        padding: 15px;
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+    }
+
+    th {
+        background: #0052d4;
+        color: white;
+    }
+
+    tr:nth-child(even) {
+        background: #f2f2f2;
+    }
+
+    tr:hover {
+        background: #ddd;
+    }
+
+    /* Wrap the button in a div with a class */
+    .refresh-container {
+        display: flex;
+        justify-content: center;
+        margin: 20px 0;
+    }
+    
+    #refreshBtn {
+        background: #0052d4; /* Blue background */
+        color: white; /* White text */
+        border: none; /* Remove default border */
+        padding: 12px 24px; /* Larger padding for better visibility */
+        font-size: 16px; /* Standard font size */
+        border-radius: 8px; /* Rounded corners */
+        cursor: pointer; /* Show a pointer on hover */
+        transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transition on hover */
+    }
+    
+    #refreshBtn:hover {
+        background: #003c8f; /* Darker blue on hover */
+        transform: scale(1.05); /* Slightly grow the button when hovered */
+    }
+    
+    #refreshBtn:active {
+        transform: scale(0.98); /* Slight shrink effect when clicked */
+    }
+    #downloadPdfBtn {
+        background: #0052d4; /* Blue background */
+        color: white; /* White text */
+        border: none; /* Remove default border */
+        padding: 12px 24px; /* Larger padding for better visibility */
+        font-size: 16px; /* Standard font size */
+        border-radius: 8px; /* Rounded corners */
+        cursor: pointer; /* Show a pointer on hover */
+        transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transition on hover */
+    }
+    
+    #downloadPdfBtn:hover {
+        background: #003c8f; /* Darker blue on hover */
+        transform: scale(1.05); /* Slightly grow the button when hovered */
+    }
+    
+    #downloadPdfBtn:active {
+        transform: scale(0.98); /* Slight shrink effect when clicked */
+    }
+</style>
